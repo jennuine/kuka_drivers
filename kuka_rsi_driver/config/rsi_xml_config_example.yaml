@@ -53,11 +53,26 @@ rsi_xml_config:
 
     # Optional per-joint velocity mapping.
     # If provided, this must also contain one entry per joint.
-      # velocities:
-      #   - joint_identifier: "joint_1"
-      #     xml_element: "AIVel"
-      #     xml_attribute: "A1"
-      #   # ... repeat for each joint
+    #  velocities:
+    #    - joint_identifier: "joint_1"
+    #      xml_element: "AIVel"
+    #      xml_attribute: "A1"
+    #    - joint_identifier: "joint_2"
+    #      xml_element: "AIVel"
+    #      xml_attribute: "A2"
+    #    - joint_identifier: "joint_3"
+    #      xml_element: "AIVel"
+    #      xml_attribute: "A3"
+    #    - joint_identifier: "joint_4"
+    #      xml_element: "AIVel"
+    #      xml_attribute: "A4"
+    #    - joint_identifier: "joint_5"
+    #      xml_element: "AIVel"
+    #      xml_attribute: "A5"
+    #    - joint_identifier: "joint_6"
+    #      xml_element: "AIVel"
+    #      xml_attribute: "A6"
+        # ... repeat for each joint
 
     # Optional per-joint torque mapping.
     # If provided, this must also contain one entry per joint.

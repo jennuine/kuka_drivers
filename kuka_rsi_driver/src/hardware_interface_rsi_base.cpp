@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cmath>
 #include <limits>
 #include <vector>
 
@@ -36,6 +37,8 @@ CallbackReturn KukaRSIHardwareInterfaceBase::on_init(
   }
 
   interface_data_.position_states.resize(
+    info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  interface_data_.prev_position_states.resize(
     info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   interface_data_.velocity_states.resize(
     info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
@@ -99,12 +102,12 @@ CallbackReturn KukaRSIHardwareInterfaceBase::on_init(
   // Warn if velocity/torque interfaces are exported but not configured in XML
   if (!optional_interface_flags_.has_velocity_state_interface)
   {
-    RCLCPP_WARN(
+    RCLCPP_INFO(
       logger_,
-      "Velocity state interfaces will be exported to ROS 2 Control, but "
-      "motion_state.joints.velocities is not configured in RSI XML. Velocity state values will "
-      "remain at their default (NaN) and will not be updated with actual measurements from the "
-      "robot.");
+      "motion_state.joints.velocities is not configured in RSI XML. Velocity state values will be "
+      "derived by differentiating the measured joint positions over the RSI cycle time, not "
+      "measured by the robot. RSI position is quantised, so filter before using them for anything "
+      "tighter than a brake ramp.");
   }
 
   if (!optional_interface_flags_.has_torque_state_interface)
@@ -437,6 +440,10 @@ void KukaRSIHardwareInterfaceBase::Read(const int64_t request_timeout)
       const auto & velocities = req_message.GetMeasuredVelocities();
       std::copy(velocities.cbegin(), velocities.cend(), interface_data_.velocity_states.begin());
     }
+    else
+    {
+      DeriveVelocityStates();
+    }
     if (optional_interface_flags_.has_torque_state_interface)
     {
       const auto & torques = req_message.GetMeasuredTorques();
@@ -518,6 +525,31 @@ void KukaRSIHardwareInterfaceBase::CopyGPIOStatesToCommands()
         interface_data_.gpio_states[runtime_state_.gpio_states_to_commands_map[i]];
     }
   }
+}
+
+// RSI has no built-in axis-velocity send object, so on most controllers nothing
+// can be mapped to motion_state.joints.velocities and the state would otherwise
+// stay NaN for the life of the process -- claimable by a controller but never
+// written, which is worse than absent. Differentiating the positions we already
+// receive is exact in time: the KRC owns the clock and the cycle time is fixed,
+// so dt is the nominal cycle rather than a jittery host-side measurement.
+void KukaRSIHardwareInterfaceBase::DeriveVelocityStates()
+{
+  const double dt =
+    ((control_state_.prev_cycle_time == RsiCycleTime::RSI_12MS) ? 12.0 : 4.0) / 1000.0;
+
+  for (size_t i = 0; i < interface_data_.velocity_states.size(); i++)
+  {
+    const double prev = interface_data_.prev_position_states[i];
+    // First cycle after activation, or after a cycle-time change: no usable
+    // previous sample, so report standstill rather than a step-sized spike.
+    interface_data_.velocity_states[i] =
+      std::isfinite(prev) ? (interface_data_.position_states[i] - prev) / dt : 0.0;
+  }
+
+  std::copy(
+    interface_data_.position_states.cbegin(), interface_data_.position_states.cend(),
+    interface_data_.prev_position_states.begin());
 }
 
 kuka::external::control::kss::GPIOConfiguration KukaRSIHardwareInterfaceBase::ParseGPIOConfig(
@@ -791,6 +823,14 @@ void KukaRSIHardwareInterfaceBase::ResetDiagnostics()
   diagnostics_state_.packet_loss_count = 0;
   diagnostics_state_.last_ipoc = 0;
   diagnostics_state_.last_msg_received_time = std::chrono::steady_clock::time_point{};
+
+  // Also drop the previous position sample. The arm can move while external
+  // control is off -- by jog, or by the KRL program after a fault -- so a sample
+  // carried across an activation boundary would differentiate into a spike on the
+  // first cycle. This is the only hook both activation paths share.
+  std::fill(
+    interface_data_.prev_position_states.begin(), interface_data_.prev_position_states.end(),
+    std::numeric_limits<double>::quiet_NaN());
 }
 
 kuka::external::control::Status KukaRSIHardwareInterfaceBase::ChangeCycleTime()

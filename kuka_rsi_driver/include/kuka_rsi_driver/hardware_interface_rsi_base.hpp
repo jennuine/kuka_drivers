@@ -96,6 +96,8 @@ protected:
 
   KUKA_RSI_DRIVER_LOCAL void CopyGPIOStatesToCommands();
 
+  KUKA_RSI_DRIVER_LOCAL void DeriveVelocityStates();
+
   virtual KUKA_RSI_DRIVER_LOCAL void CreateRobotInstance(
     const kuka::external::control::kss::Configuration &) = 0;
 
@@ -112,6 +114,9 @@ protected:
   struct InterfaceData
   {
     std::vector<double> position_states;
+    // Previous cycle's positions, kept only to derive velocity when the RSI XML
+    // config maps no VELOCITY field. NaN means "no usable previous sample".
+    std::vector<double> prev_position_states;
     std::vector<double> velocity_states;
     std::vector<double> torque_states;
     std::vector<double> gpio_states;

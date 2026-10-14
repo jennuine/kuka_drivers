@@ -43,18 +43,20 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "KUKA_RSI_DRIVER_BUILDING_LIB
 # prevent pluginlib from using boost
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-ament_target_dependencies(${PROJECT_NAME} hardware_interface kuka_drivers_core kuka-external-control-sdk-iiqka2)
-target_link_libraries(${PROJECT_NAME} Kuka::kuka-external-control-sdk-iiqka2 yaml-cpp)
+target_link_libraries(${PROJECT_NAME}
+  hardware_interface::hardware_interface
+  kuka_drivers_core::kuka_drivers_core
+  Kuka::kuka-external-control-sdk-iiqka2
+  yaml-cpp)
 
 # Shared library for robot_manager_base
 add_library(robot_manager_base STATIC src/robot_manager_base.cpp)
-ament_target_dependencies(
-  robot_manager_base
-  std_msgs
-  kuka_driver_interfaces
-  kuka_drivers_core
-  controller_manager_msgs)
-target_link_libraries(robot_manager_base kuka_drivers_core::communication_helpers)
+target_link_libraries(robot_manager_base
+  std_msgs::std_msgs
+  kuka_driver_interfaces::kuka_driver_interfaces
+  kuka_drivers_core::kuka_drivers_core
+  controller_manager_msgs::controller_manager_msgs
+  kuka_drivers_core::communication_helpers)
 
 add_executable(robot_manager_node_extended src/robot_manager_node_extended.cpp)
 target_link_libraries(robot_manager_node_extended PRIVATE robot_manager_base)

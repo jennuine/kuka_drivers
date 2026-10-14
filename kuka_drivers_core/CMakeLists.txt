@@ -30,16 +30,25 @@ add_library(kuka_drivers_core SHARED
   src/controller_handler.cpp
   src/joint_interface_validator.cpp
 )
-ament_target_dependencies(kuka_drivers_core rclcpp rclcpp_lifecycle lifecycle_msgs hardware_interface)
+target_link_libraries(kuka_drivers_core
+  rclcpp::rclcpp
+  rclcpp_lifecycle::rclcpp_lifecycle
+  lifecycle_msgs::lifecycle_msgs
+  hardware_interface::hardware_interface)
 
 add_executable(control_node
   src/control_node.cpp)
-ament_target_dependencies(control_node rclcpp rclcpp_lifecycle controller_manager)
+target_link_libraries(control_node
+  rclcpp::rclcpp
+  rclcpp_lifecycle::rclcpp_lifecycle
+  controller_manager::controller_manager)
 
 add_executable(lifecycle_manager
   src/lifecycle_manager.cpp)
-ament_target_dependencies(lifecycle_manager rclcpp lifecycle_msgs)
-target_link_libraries(lifecycle_manager communication_helpers)
+target_link_libraries(lifecycle_manager
+  rclcpp::rclcpp
+  lifecycle_msgs::lifecycle_msgs
+  communication_helpers)
 
 ament_export_targets(export_kuka_drivers_core HAS_LIBRARY_TARGET)
 ament_export_dependencies(rclcpp rclcpp_lifecycle lifecycle_msgs hardware_interface)
@@ -48,7 +57,9 @@ ament_export_libraries(${PROJECT_NAME})
 add_library(communication_helpers SHARED
   include/communication_helpers/ros2_control_tools.hpp
   include/communication_helpers/service_tools.hpp)
-ament_target_dependencies(communication_helpers rclcpp controller_manager_msgs)
+target_link_libraries(communication_helpers
+  rclcpp::rclcpp
+  controller_manager_msgs::controller_manager_msgs)
 set_target_properties(communication_helpers PROPERTIES LINKER_LANGUAGE CXX)
 
 ament_export_targets(communication_helpers HAS_LIBRARY_TARGET)

@@ -328,8 +328,6 @@ def launch_setup(context, *args, **kwargs):
             controller_name,
             "-c",
             "controller_manager",
-            "-n",
-            ns,
         ]
 
         # Add param-file if it's provided
@@ -342,6 +340,7 @@ def launch_setup(context, *args, **kwargs):
         return Node(
             package="controller_manager",
             executable="spawner",
+            namespace=ns,
             prefix=prefix_cmd,
             arguments=arg_list,
         )

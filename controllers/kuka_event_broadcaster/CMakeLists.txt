@@ -27,9 +27,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
 
-ament_target_dependencies(${PROJECT_NAME} controller_interface kuka_drivers_core kuka_driver_interfaces realtime_tools
-)
-target_link_libraries(${PROJECT_NAME} kuka_event_broadcaster_parameters)
+target_link_libraries(${PROJECT_NAME}
+  controller_interface::controller_interface
+  kuka_drivers_core::kuka_drivers_core
+  kuka_driver_interfaces::kuka_driver_interfaces
+  realtime_tools::realtime_tools
+  kuka_event_broadcaster_parameters)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

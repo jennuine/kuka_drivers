@@ -29,18 +29,18 @@ target_compile_features(kuka_kss_message_handler PUBLIC c_std_99 cxx_std_17)  # 
 target_include_directories(kuka_kss_message_handler PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
-ament_target_dependencies(
+target_link_libraries(
   kuka_kss_message_handler
-  controller_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
-  std_msgs
-  realtime_tools
-  kuka_drivers_core
-  kuka_driver_interfaces
+  controller_interface::controller_interface
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  rclcpp_lifecycle::rclcpp_lifecycle
+  std_msgs::std_msgs
+  realtime_tools::realtime_tools
+  kuka_drivers_core::kuka_drivers_core
+  kuka_driver_interfaces::kuka_driver_interfaces
+  kuka_kss_message_handler_parameters
 )
-target_link_libraries(kuka_kss_message_handler kuka_kss_message_handler_parameters)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

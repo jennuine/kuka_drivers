@@ -26,9 +26,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
 
-ament_target_dependencies(${PROJECT_NAME} controller_interface std_msgs kuka_drivers_core
-)
-target_link_libraries(${PROJECT_NAME} kuka_control_mode_handler_parameters)
+target_link_libraries(${PROJECT_NAME}
+  controller_interface::controller_interface
+  std_msgs::std_msgs
+  kuka_drivers_core::kuka_drivers_core
+  kuka_control_mode_handler_parameters)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
